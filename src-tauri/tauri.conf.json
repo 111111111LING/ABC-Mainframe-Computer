@@ -26,6 +26,8 @@
       "targets": ["deb", "appimage", "msi"],
       "identifier": "com.ch32v317.config-tool",
       "icon": [
+        "icons/icon.png",
+        "icons/icon.ico",
         "icons/icon.svg"
       ]
     },
