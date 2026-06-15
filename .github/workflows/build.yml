@@ -79,5 +79,5 @@ jobs:
           files: |
             **/*.deb
             **/*.AppImage
-            **/*.msi
+            **/*.exe
           generate_release_notes: true

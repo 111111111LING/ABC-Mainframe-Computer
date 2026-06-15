@@ -23,7 +23,7 @@
     },
     "bundle": {
       "active": true,
-      "targets": ["deb", "appimage", "msi"],
+      "targets": ["deb", "appimage", "nsis"],
       "identifier": "com.ch32v317.config-tool",
       "icon": [
         "icons/icon.png",
