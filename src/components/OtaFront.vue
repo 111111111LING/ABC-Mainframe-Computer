@@ -3,10 +3,10 @@
     <n-grid :cols="2" :x-gap="24">
       <n-grid-item>
         <n-form label-placement="top">
-          <n-form-item label="前板 8018 固件 (.fota)">
+          <n-form-item label="OTA固件 (.bin)">
             <n-input
               :value="firmwarePath"
-              placeholder="选择fota固件文件"
+              placeholder="选择bin固件文件"
               readonly
             >
               <template #suffix>
@@ -65,7 +65,7 @@ const statusTagType = computed(() => {
 
 async function selectFirmware() {
   const selected = await open({
-    filters: [{ name: "FOTA Firmware", extensions: ["fota"] }],
+    filters: [{ name: "Firmware", extensions: ["bin"] }],
     multiple: false,
   });
   if (!selected) return;
@@ -77,17 +77,17 @@ async function selectFirmware() {
 async function startUpgrade() {
   if (!firmwarePath.value) return;
   upgrading.value = true;
-  statusText.value = "正升级前板...";
+  statusText.value = "正在OTA升级...";
   try {
     const result = await invoke("start_ota_upgrade", {
       board: "front",
       firmwarePath: firmwarePath.value,
     });
-    statusText.value = "前板OTA完成";
+    statusText.value = "OTA完成";
     message.success(result);
   } catch (e) {
     statusText.value = `失败: ${e}`;
-    message.error(`前板OTA失败: ${e}`);
+    message.error(`OTA失败: ${e}`);
   } finally {
     upgrading.value = false;
   }

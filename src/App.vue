@@ -20,11 +20,8 @@
             <n-tab-pane name="iap" tab="317升级">
               <IapFlasher />
             </n-tab-pane>
-            <n-tab-pane name="ota-front" tab="前板OTA">
+            <n-tab-pane name="ota-front" tab="前后板OTA">
               <OtaFront />
-            </n-tab-pane>
-            <n-tab-pane name="ota-back" tab="后板OTA">
-              <OtaBack />
             </n-tab-pane>
           </n-tabs>
         </n-layout-content>
@@ -46,7 +43,6 @@ import DeviceIdentity from "./components/DeviceIdentity.vue";
 import NetworkConfig from "./components/NetworkConfig.vue";
 import IapFlasher from "./components/IapFlasher.vue";
 import OtaFront from "./components/OtaFront.vue";
-import OtaBack from "./components/OtaBack.vue";
 import StatusBar from "./components/StatusBar.vue";
 
 const store = useConfigStore();
