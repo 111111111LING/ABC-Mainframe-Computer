@@ -7,6 +7,40 @@ pub const CMD_OTA_FRONT: u8 = 0x03;
 pub const CMD_OTA_BACK: u8 = 0x04;
 pub const CMD_IAP_317: u8 = 0x05;
 
+// fota_t 包结构 (对应 8018 的 fota_t)
+const FOTA_HEADER_SIZE: usize = 20;
+const AEAD_TAG_LEN: usize = 16;
+
+/// 从 .fota 文件中解析出一个个独立的 fota_t 包
+pub fn split_fota_packets(data: &[u8]) -> Result<Vec<Vec<u8>>, String> {
+    let mut packets = Vec::new();
+    let mut offset = 0;
+    while offset < data.len() {
+        if offset + FOTA_HEADER_SIZE > data.len() {
+            return Err(format!("fota文件截断: offset={} < header", offset));
+        }
+        let op = data[offset + 14]; // fota_t.operation
+        let size = u32::from_le_bytes(data[offset + 8..offset + 12].try_into().unwrap()); // fota_t.size
+        let pkt_len = match op {
+            0xEE => FOTA_HEADER_SIZE + 12 + 32, // 64
+            0xFF => FOTA_HEADER_SIZE + size as usize + AEAD_TAG_LEN,
+            0xCC => FOTA_HEADER_SIZE + 20, // 40
+            _ => return Err(format!("未知fota操作: 0x{:02X} @ offset {}", op, offset)),
+        };
+        if offset + pkt_len > data.len() {
+            return Err(format!(
+                "fota包截断: offset={}, need={}, have={}",
+                offset,
+                pkt_len,
+                data.len() - offset
+            ));
+        }
+        packets.push(data[offset..offset + pkt_len].to_vec());
+        offset += pkt_len;
+    }
+    Ok(packets)
+}
+
 pub fn build_frame(cmd: u8, data: &[u8]) -> Vec<u8> {
     let mut frame = Vec::with_capacity(5 + data.len());
     frame.push(FRAME_H1);

@@ -25,6 +25,7 @@ fn main() {
             iap_server::send_device_config,
             iap_server::send_network_config,
             iap_server::start_iap_upgrade,
+            iap_server::start_ota_upgrade,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

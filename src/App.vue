@@ -20,10 +20,10 @@
             <n-tab-pane name="iap" tab="317升级">
               <IapFlasher />
             </n-tab-pane>
-            <n-tab-pane name="ota-front" tab="前板OTA" disabled>
+            <n-tab-pane name="ota-front" tab="前板OTA">
               <OtaFront />
             </n-tab-pane>
-            <n-tab-pane name="ota-back" tab="后板OTA" disabled>
+            <n-tab-pane name="ota-back" tab="后板OTA">
               <OtaBack />
             </n-tab-pane>
           </n-tabs>

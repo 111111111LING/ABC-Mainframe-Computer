@@ -341,3 +341,52 @@ pub async fn start_iap_upgrade(
 
     Ok("固件已发送，等待设备校验并重启...".into())
 }
+
+#[tauri::command]
+pub async fn start_ota_upgrade(
+    app_handle: AppHandle,
+    board: String,
+    firmware_path: String,
+) -> Result<String, String> {
+    let cmd = match board.as_str() {
+        "front" => protocol::CMD_OTA_FRONT,
+        "back" => protocol::CMD_OTA_BACK,
+        _ => return Err("board 必须是 'front' 或 'back'".into()),
+    };
+
+    let fota_data =
+        std::fs::read(&firmware_path).map_err(|e| format!("读取fota文件失败: {}", e))?;
+
+    let packets = protocol::split_fota_packets(&fota_data)?;
+
+    let state = app_handle.state::<IapState>();
+    let cmd_tx = {
+        let s = state.inner.lock().unwrap();
+        if !s.connected {
+            return Err("设备未连接".into());
+        }
+        s.cmd_tx.clone().ok_or_else(|| "服务器未运行".to_string())?
+    };
+
+    emit_log(&app_handle, &format!("开始OTA {} 板 ({} 包)", board, packets.len()));
+
+    for (i, packet) in packets.iter().enumerate() {
+        let frame = protocol::build_frame(cmd, packet);
+        let (resp_tx, resp_rx) = oneshot::channel();
+        cmd_tx
+            .send(ServerCmd::SendAndWaitAck {
+                frame,
+                expected_resp_cmd: cmd | 0x80,
+                resp_tx,
+            })
+            .await
+            .map_err(|_| "服务器已停止".to_string())?;
+        let status = resp_rx.await.map_err(|_| "服务器已停止".to_string())??;
+        emit_log(&app_handle, &format!("  包 {}/{} 完成, status=0x{:02X}", i + 1, packets.len(), status));
+    }
+
+    emit_log(&app_handle, "OTA升级完成!");
+    emit_event(&app_handle, "ota-complete", &board);
+
+    Ok(format!("OTA {} 板升级完成 ({} 包)", board, packets.len()))
+}
