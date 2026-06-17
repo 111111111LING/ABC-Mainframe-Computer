@@ -1,12 +1,21 @@
 <template>
   <n-message-provider>
-    <n-config-provider :theme="darkTheme">
+    <n-config-provider :theme="isDark ? darkTheme : null">
       <n-layout class="layout">
         <n-layout-header class="header">
-          <div class="header-title">
-            <n-h2 style="margin: 0">CH32V317 设备配置工具</n-h2>
-            <n-text depth="3">v0.2.0</n-text>
-          </div>
+          <div class="header-row">
+	  <div class="header-title">
+	    <n-h2 style="margin: 0">CH32V317 设备配置工具</n-h2>
+	    <n-text depth="3">v0.2.0</n-text>
+	  </div>
+
+	  <n-button
+	    secondary
+	    @click="isDark = !isDark"
+	  >
+	    {{ isDark ? "浅色模式" : "深色模式" }}
+	  </n-button>
+	</div>
         </n-layout-header>
 
         <n-layout-content class="content" content-style="padding: 24px;">
@@ -32,7 +41,7 @@
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
 import { darkTheme } from "naive-ui";
 import { listen } from "@tauri-apps/api/event";
 import { useConfigStore } from "./stores/configStore";
@@ -41,6 +50,7 @@ import IapFlasher from "./components/IapFlasher.vue";
 import OtaFront from "./components/OtaFront.vue";
 import StatusBar from "./components/StatusBar.vue";
 
+const isDark = ref(true);
 const store = useConfigStore();
 const unlisteners = [];
 
@@ -87,6 +97,12 @@ onBeforeUnmount(() => {
   align-items: center;
   padding: 12px 24px;
   border-bottom: 1px solid var(--border-color);
+}
+.header-row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 .header-title {
   display: flex;
