@@ -66,6 +66,34 @@ pub fn import_excel(path: String) -> Result<Vec<DeviceRecord>, String> {
 }
 
 #[tauri::command]
+pub fn export_template(path: String) -> Result<(), String> {
+    let mut workbook = Workbook::new();
+    let sheet = workbook.add_worksheet();
+
+    let col = |idx| idx as u16;
+    let headers = [
+        "ProductID", "DeviceName", "SecKey", "Bind", "DHCP",
+        "IP", "Gateway", "Mask", "MAC",
+        "MQTT_Domain", "MQTT_Port", "NTP_IP", "NTP_Port", "配置状态",
+    ];
+    for (i, h) in headers.iter().enumerate() {
+        sheet.write_string(0, col(i), *h).map_err(|e| e.to_string())?;
+    }
+
+    let sample: [&str; 14] = [
+        "7KdEHCyUDG", "DVDR260512010901", "N0Y0NzY2NDYyQzI2MkU0MjAwRjZCNTEwQkRCMkI4MkU=",
+        "1", "1", "192.168.124.100", "192.168.124.1", "255.255.255.0",
+        "04:2B:58:09:D2:F3", "82.3.18.138", "30980", "10.229.149.9", "123", "未配置",
+    ];
+    for (i, val) in sample.iter().enumerate() {
+        sheet.write_string(1, col(i), *val).map_err(|e| e.to_string())?;
+    }
+
+    workbook.save(&path).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
 pub fn export_excel(path: String, records: Vec<DeviceRecord>) -> Result<(), String> {
     let mut workbook = Workbook::new();
 
@@ -87,7 +115,7 @@ pub fn export_excel(path: String, records: Vec<DeviceRecord>) -> Result<(), Stri
         "MQTT_Port",
         "NTP_IP",
         "NTP_Port",
-        "已配置",
+        "配置状态",
     ];
     for (i, h) in headers.iter().enumerate() {
         sheet

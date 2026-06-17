@@ -42,7 +42,6 @@
       :pagination="pagination"
       :row-props="rowProps"
       :loading="loading"
-      @update:page="onPageChange"
     />
 
     <n-divider />
@@ -174,7 +173,7 @@
 </template>
 
 <script setup>
-import { ref, h, onMounted } from "vue";
+import { ref, reactive, h, onMounted } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { open, save } from "@tauri-apps/api/dialog";
 import { useMessage } from "naive-ui";
@@ -194,11 +193,18 @@ const passwordSet = ref(false);
 const searchName = ref("");
 const searchIp = ref("");
 
-const pagination = ref({
+const pagination = reactive({
   page: 1,
   pageSize: 15,
   showSizePicker: true,
   pageSizes: [10, 15, 20, 50],
+  onChange: (page) => {
+    pagination.page = page;
+  },
+  onUpdatePageSize: (pageSize) => {
+    pagination.pageSize = pageSize;
+    pagination.page = 1;
+  },
 });
 
 const showPasswordModal = ref(false);
@@ -212,14 +218,14 @@ const confirmPasswordInput = ref("");
 function createEmptyRecord() {
   return {
     id: null,
-    product_id: "",
+    product_id: "7KdEHCyUDG",
     device_name: "",
-    sec_key: "",
+    sec_key: "N0Y0NzY2NDYyQzI2MkU0MjAwRjZCNTEwQkRCMkI4MkU=",
     bind: false,
     lan_dhcp: true,
     lan_ip: "",
     lan_gateway: "",
-    lan_mask: "",
+    lan_mask: "255.255.255.0",
     mac_addr: "",
     mqtt_domain: "82.3.18.138",
     mqtt_port: 30980,
@@ -263,10 +269,6 @@ function rowProps(row) {
     },
     onClick: () => selectRow(row),
   };
-}
-
-function onPageChange(page) {
-  pagination.value.page = page;
 }
 
 function selectRow(row) {
@@ -340,15 +342,17 @@ async function importExcel() {
 }
 
 async function exportTemplate() {
-  const path = await save({
-    filters: [{ name: "Excel", extensions: ["xlsx"] }],
-    defaultPath: "设备配置模板.xlsx",
-  });
-  if (!path) return;
-
   exporting.value = true;
   try {
-    await invoke("export_excel", { path, records: [] });
+    const path = await save({
+      filters: [{ name: "Excel", extensions: ["xlsx"] }],
+      defaultPath: "设备配置模板.xlsx",
+    });
+    if (!path) {
+      exporting.value = false;
+      return;
+    }
+    await invoke("export_template", { path });
     msg.success("模板已导出，请参照表头填写数据", { duration: 5000 });
   } catch (e) {
     msg.error("导出失败: " + e);
@@ -358,14 +362,16 @@ async function exportTemplate() {
 }
 
 async function exportExcel() {
-  const path = await save({
-    filters: [{ name: "Excel", extensions: ["xlsx"] }],
-    defaultPath: "设备配置列表.xlsx",
-  });
-  if (!path) return;
-
   exporting.value = true;
   try {
+    const path = await save({
+      filters: [{ name: "Excel", extensions: ["xlsx"] }],
+      defaultPath: "设备配置列表.xlsx",
+    });
+    if (!path) {
+      exporting.value = false;
+      return;
+    }
     await invoke("export_excel", { path, records: allRecords.value });
     msg.success("导出成功");
   } catch (e) {

@@ -284,20 +284,27 @@ pub async fn save_device_config(
         None => true,
     };
 
-    {
+    let record_id = {
         let excel_imported = *state.excel_imported.lock().map_err(|e| e.to_string())?;
         if excel_imported {
             let db = state.db.lock().map_err(|e| e.to_string())?;
             if should_insert {
-                insert_device_in_db(&db, &record)?;
+                let new_id = insert_device_in_db(&db, &record)?;
+                Some(new_id)
             } else if let Some(prev) = &existing {
                 update_device_in_db(&db, prev.id.unwrap(), &record)?;
+                prev.id
+            } else {
+                None
             }
         } else {
             let mut session = state.session_records.lock().map_err(|e| e.to_string())?;
-            session.push(record.clone());
+            let mut rec = record.clone();
+            rec.configured = true;
+            session.push(rec);
+            None
         }
-    }
+    };
 
     let dev_cfg = crate::config::DeviceConfig {
         product_id: record.product_id.clone(),
@@ -324,7 +331,7 @@ pub async fn save_device_config(
     let frame = crate::protocol::build_frame(crate::protocol::CMD_CFG_NETWORK, &data);
     crate::iap_server::send_frame_and_wait(&app_handle, frame, crate::protocol::CMD_CFG_NETWORK | 0x80).await?;
 
-    if let Some(id) = record.id {
+    if let Some(id) = record_id {
         let db = state.db.lock().map_err(|e| e.to_string())?;
         mark_configured_in_db(&db, id)?;
     }

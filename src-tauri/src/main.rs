@@ -40,6 +40,7 @@ fn main() {
             database::set_excel_imported,
             excel::import_excel,
             excel::export_excel,
+            excel::export_template,
             auth::is_password_set,
             auth::set_admin_password,
             auth::verify_admin_password,
