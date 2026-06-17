@@ -238,7 +238,14 @@ function createEmptyRecord() {
 }
 
 const columns = [
-  { title: "ID", key: "id", width: 60 },
+  {
+    title: "序号",
+    key: "seq",
+    width: 60,
+    render(row, index) {
+      return index + 1 + (pagination.page - 1) * pagination.pageSize;
+    },
+  },
   { title: "DeviceName", key: "device_name", sortable: true },
   { title: "ProductID", key: "product_id" },
   { title: "LAN IP", key: "lan_ip", sortable: true },
@@ -326,7 +333,6 @@ async function importExcel() {
   importing.value = true;
   try {
     const records = await invoke("import_excel", { path });
-    await invoke("set_excel_imported", { imported: true });
 
     allRecords.value = records;
     applySearch();
@@ -397,14 +403,18 @@ async function saveConfig() {
       record: formRecord.value,
     });
     showSaveOkModal.value = true;
-    await loadRecords();
-    // Try to select the saved record by name
-    const found = allRecords.value.find(
-      (r) => r.device_name === formRecord.value.device_name
+
+    const saved = { ...formRecord.value, configured: true };
+    const idx = allRecords.value.findIndex(
+      (r) => r.device_name === saved.device_name
     );
-    if (found) {
-      formRecord.value = { ...found };
+    if (idx >= 0) {
+      allRecords.value[idx] = saved;
+    } else {
+      allRecords.value.push(saved);
     }
+    formRecord.value = saved;
+    applySearch();
   } catch (e) {
     msg.error("保存失败: " + e);
   } finally {

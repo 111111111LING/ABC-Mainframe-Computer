@@ -8,8 +8,6 @@ use crate::config::DeviceRecord;
 
 pub struct ConfigState {
     pub db: Mutex<Connection>,
-    pub session_records: Mutex<Vec<DeviceRecord>>,
-    pub excel_imported: Mutex<bool>,
     pub config_path: PathBuf,
 }
 
@@ -48,8 +46,6 @@ impl ConfigState {
 
         Self {
             db: Mutex::new(db),
-            session_records: Mutex::new(Vec::new()),
-            excel_imported: Mutex::new(false),
             config_path: config_dir.join("config.json"),
         }
     }
@@ -197,37 +193,10 @@ pub fn delete_device_from_db(db: &Connection, id: i64) -> Result<(), String> {
     Ok(())
 }
 
-fn filter_session_by_name(records: &[DeviceRecord], kw: &str) -> Vec<DeviceRecord> {
-    if kw.is_empty() {
-        return records.to_vec();
-    }
-    let kw = kw.to_lowercase();
-    records
-        .iter()
-        .filter(|r| r.device_name.to_lowercase().contains(&kw))
-        .cloned()
-        .collect()
-}
-
-fn filter_session_by_ip(records: &[DeviceRecord], kw: &str) -> Vec<DeviceRecord> {
-    if kw.is_empty() {
-        return records.to_vec();
-    }
-    let kw = kw.to_lowercase();
-    records
-        .iter()
-        .filter(|r| r.lan_ip.to_lowercase().contains(&kw))
-        .cloned()
-        .collect()
-}
-
 #[tauri::command]
 pub fn get_all_devices(state: State<'_, ConfigState>) -> Result<Vec<DeviceRecord>, String> {
     let db = state.db.lock().map_err(|e| e.to_string())?;
-    let mut records = get_all_from_db(&db)?;
-    let session = state.session_records.lock().map_err(|e| e.to_string())?;
-    records.extend(session.clone());
-    Ok(records)
+    get_all_from_db(&db)
 }
 
 #[tauri::command]
@@ -237,35 +206,13 @@ pub fn search_devices(
     ip_kw: String,
 ) -> Result<Vec<DeviceRecord>, String> {
     let db = state.db.lock().map_err(|e| e.to_string())?;
-
-    let from_db = if !name_kw.is_empty() {
-        search_name_in_db(&db, &name_kw)?
-    } else if !ip_kw.is_empty() {
-        search_ip_in_db(&db, &ip_kw)?
-    } else {
-        get_all_from_db(&db)?
-    };
-
-    let mut from_db = from_db;
-    let session = state.session_records.lock().map_err(|e| e.to_string())?;
-
-    let mut filtered_session = session.clone();
     if !name_kw.is_empty() {
-        filtered_session = filter_session_by_name(&filtered_session, &name_kw);
+        search_name_in_db(&db, &name_kw)
+    } else if !ip_kw.is_empty() {
+        search_ip_in_db(&db, &ip_kw)
+    } else {
+        get_all_from_db(&db)
     }
-    if !ip_kw.is_empty() {
-        filtered_session = filter_session_by_ip(&filtered_session, &ip_kw);
-    }
-
-    from_db.extend(filtered_session);
-    Ok(from_db)
-}
-
-#[tauri::command]
-pub fn set_excel_imported(state: State<'_, ConfigState>, imported: bool) -> Result<(), String> {
-    let mut flag = state.excel_imported.lock().map_err(|e| e.to_string())?;
-    *flag = imported;
-    Ok(())
 }
 
 #[tauri::command]
@@ -285,23 +232,14 @@ pub async fn save_device_config(
     };
 
     let record_id = {
-        let excel_imported = *state.excel_imported.lock().map_err(|e| e.to_string())?;
-        if excel_imported {
-            let db = state.db.lock().map_err(|e| e.to_string())?;
-            if should_insert {
-                let new_id = insert_device_in_db(&db, &record)?;
-                Some(new_id)
-            } else if let Some(prev) = &existing {
-                update_device_in_db(&db, prev.id.unwrap(), &record)?;
-                prev.id
-            } else {
-                None
-            }
+        let db = state.db.lock().map_err(|e| e.to_string())?;
+        if should_insert {
+            let new_id = insert_device_in_db(&db, &record)?;
+            Some(new_id)
+        } else if let Some(prev) = &existing {
+            update_device_in_db(&db, prev.id.unwrap(), &record)?;
+            prev.id
         } else {
-            let mut session = state.session_records.lock().map_err(|e| e.to_string())?;
-            let mut rec = record.clone();
-            rec.configured = true;
-            session.push(rec);
             None
         }
     };

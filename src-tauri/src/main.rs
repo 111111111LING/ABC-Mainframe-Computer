@@ -37,7 +37,6 @@ fn main() {
             database::search_devices,
             database::save_device_config,
             database::delete_device,
-            database::set_excel_imported,
             excel::import_excel,
             excel::export_excel,
             excel::export_template,
