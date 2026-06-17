@@ -10,17 +10,14 @@
         </n-layout-header>
 
         <n-layout-content class="content" content-style="padding: 24px;">
-          <n-tabs type="line" animated default-value="device">
-            <n-tab-pane name="device" tab="设备信息">
-              <DeviceIdentity />
-            </n-tab-pane>
-            <n-tab-pane name="network" tab="网络配置">
-              <NetworkConfig />
+          <n-tabs type="line" animated default-value="config">
+            <n-tab-pane name="config" tab="配置管理">
+              <ConfigManager />
             </n-tab-pane>
             <n-tab-pane name="iap" tab="317升级">
               <IapFlasher />
             </n-tab-pane>
-            <n-tab-pane name="ota-front" tab="前后板OTA">
+            <n-tab-pane name="ota" tab="前后板OTA">
               <OtaFront />
             </n-tab-pane>
           </n-tabs>
@@ -39,8 +36,7 @@ import { onMounted, onBeforeUnmount } from "vue";
 import { darkTheme } from "naive-ui";
 import { listen } from "@tauri-apps/api/event";
 import { useConfigStore } from "./stores/configStore";
-import DeviceIdentity from "./components/DeviceIdentity.vue";
-import NetworkConfig from "./components/NetworkConfig.vue";
+import ConfigManager from "./components/ConfigManager.vue";
 import IapFlasher from "./components/IapFlasher.vue";
 import OtaFront from "./components/OtaFront.vue";
 import StatusBar from "./components/StatusBar.vue";

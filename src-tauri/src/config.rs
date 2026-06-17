@@ -29,10 +29,10 @@ impl Default for NetworkConfig {
             lan_gateway: "192.168.124.1".into(),
             lan_mask: "255.255.255.0".into(),
             mac_addr: "04:2B:58:09:D2:F3".into(),
-            mqtt_server_ip: "101.132.160.111".into(),
-            mqtt_server_port: 8883,
-            ntp_server: "106.14.18.202".into(),
-            ntp_port: 12123,
+            mqtt_server_ip: "82.3.18.138".into(),
+            mqtt_server_port: 30980,
+            ntp_server: "10.229.149.9".into(),
+            ntp_port: 123,
         }
     }
 }
@@ -55,6 +55,27 @@ impl Default for AppConfig {
             network_config: NetworkConfig::default(),
         }
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeviceRecord {
+    pub id: Option<i64>,
+    pub product_id: String,
+    pub device_name: String,
+    pub sec_key: String,
+    pub bind: bool,
+    pub lan_dhcp: bool,
+    pub lan_ip: String,
+    pub lan_gateway: String,
+    pub lan_mask: String,
+    pub mac_addr: String,
+    pub mqtt_domain: String,
+    pub mqtt_port: u16,
+    pub ntp_ip: String,
+    pub ntp_port: u16,
+    pub configured: bool,
+    pub created_at: Option<String>,
+    pub configured_at: Option<String>,
 }
 
 #[tauri::command]

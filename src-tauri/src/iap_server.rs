@@ -244,7 +244,7 @@ pub async fn get_server_status(app_handle: AppHandle) -> Result<(bool, bool), St
     Ok((s.running, s.connected))
 }
 
-async fn send_frame_and_wait(
+pub(crate) async fn send_frame_and_wait(
     app_handle: &AppHandle,
     frame: Vec<u8>,
     expected_resp_cmd: u8,
