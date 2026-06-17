@@ -41,6 +41,8 @@
       :data="displayRecords"
       :pagination="pagination"
       :row-props="rowProps"
+      :row-class-name="rowClassName"
+      :key="dtKey"
       :loading="loading"
     />
 
@@ -207,6 +209,9 @@ const pagination = reactive({
   },
 });
 
+const selectedName = ref("");
+const dtKey = ref(0);
+
 const showPasswordModal = ref(false);
 const showSetPasswordModal = ref(false);
 const showResetConfirmModal = ref(false);
@@ -268,22 +273,29 @@ const columns = [
   },
 ];
 
+function rowClassName(row) {
+  if (row.device_name === selectedName.value) return "selected-row";
+  if (row.configured) return "configured-row";
+  return "";
+}
+
 function rowProps(row) {
   return {
-    style: {
-      cursor: "pointer",
-      background: row.configured ? "rgba(232,128,128,0.08)" : "rgba(99,226,183,0.08)",
-    },
+    style: { cursor: "pointer" },
     onClick: () => selectRow(row),
   };
 }
 
 function selectRow(row) {
   formRecord.value = { ...row };
+  selectedName.value = row.device_name;
+  dtKey.value++;
 }
 
 function newRecord() {
   formRecord.value = createEmptyRecord();
+  selectedName.value = "";
+  dtKey.value++;
 }
 
 async function loadRecords() {
@@ -298,8 +310,8 @@ async function loadRecords() {
   }
 }
 
-async function onSearch() {
-  pagination.value.page = 1;
+function onSearch() {
+  pagination.page = 1;
   applySearch();
 }
 
@@ -538,5 +550,17 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   margin-top: 16px;
+}
+</style>
+
+<style>
+tr.selected-row {
+  background: #3a3a3a !important;
+}
+tr.selected-row:hover {
+  background: #3a3a3a !important;
+}
+tr.configured-row {
+  background: rgba(232, 128, 128, 0.06) !important;
 }
 </style>
