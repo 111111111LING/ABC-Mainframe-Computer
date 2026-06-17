@@ -100,15 +100,11 @@
         <n-button
           type="primary"
           size="large"
-          :disabled="!unlocked"
           :loading="saving"
           @click="saveConfig"
         >
           保存配置到设备
         </n-button>
-        <n-text v-if="!unlocked" depth="3" style="margin-left: 12px">
-          请先点击右上角「解锁」输入管理员密码
-        </n-text>
       </div>
     </div>
 
